@@ -11,13 +11,14 @@ import org.json.*;
 public class Main {
     static String[] questions;
     static String[] answers;
-    static int n = 4;
+    static int n = 2;
 
     public static void main(String[] args){
         try {
             preparingForGame();
             startGame();
         } catch (Exception e) {
+            System.out.println(e);
             System.out.println("Ошибка во время загрузки");
         }
     }
@@ -37,6 +38,8 @@ public class Main {
             ans = sc.nextLine();
             if (ans.equalsIgnoreCase(answers[i]))
                 correct_answers += 1;
+            else
+                System.out.println("Не верно! верный ответ  - " + answers[i]);
         }
         System.out.println("Игра окончена. Вы ответили верно на "
                             + correct_answers + " из " + n
@@ -59,18 +62,17 @@ public class Main {
 
     public static String translate(String word) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://google-translate1.p.rapidapi.com/language/translate/v2"))
-                .header("content-type", "application/x-www-form-urlencoded")
-                .header("Accept-Encoding", "application/gzip")
-                .header("X-RapidAPI-Host", "google-translate1.p.rapidapi.com")
+                .uri(URI.create("https://microsoft-translator-text.p.rapidapi.com/translate?to%5B0%5D=ru&api-version=3.0&profanityAction=NoAction&textType=plain"))
+                .header("content-type", "application/json")
+                .header("X-RapidAPI-Host", "microsoft-translator-text.p.rapidapi.com")
                 .header("X-RapidAPI-Key", "0e0345dbc8msh8a0de13a6e012d1p1c4379jsn3e8c02db7303")
-                .method("POST", HttpRequest.BodyPublishers.ofString("q=" + word + "&target=ru&source=en"))
+                .method("POST", HttpRequest.BodyPublishers.ofString("[{\"Text\": \""+word+"\"}]"))
                 .build();
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        JSONObject obj = new JSONObject(response.body());
-        obj = (JSONObject) obj.get("data");
-        JSONArray arr = (JSONArray) obj.get("translations");
+        JSONArray arr = new JSONArray(response.body());
+        JSONObject obj = (JSONObject) arr.get(0);
+        arr = (JSONArray) obj.get("translations");
         obj = (JSONObject) arr.get(0);
-        return (String) obj.get("translatedText");
+        return (String) obj.get("text");
     }
 }
